@@ -4,43 +4,51 @@ import { Request, Response } from "express";
 import formatValidationError from "../errors/validation";
 
 export const updateMovie = async (req: Request, res: Response) => {
-  // ! 1) Get the movieId
-  const movieId = req.params.movieId;
-  const update = req.body;
-  // ! 2) Update the movie
-  const updatedMovie = await Movies.findByIdAndUpdate(movieId, update, {
-    new: true,
-  }); // ? The final argument returns the updated movie.
-  // ! 3) Send back the movie you've updated
-  res.send(updatedMovie);
+  try {
+    // ! 1) Get the movieId
+    const movieId = req.params.movieId;
+    const update = req.body;
+    // ! 2) Update the movie
+    const updatedMovie = await Movies.findByIdAndUpdate(movieId, update, {
+      new: true,
+    }); // ? The final argument returns the updated movie.
+    // ! 3) Send back the movie you've updated
+    res.send(updatedMovie);
+  } catch (error) {
+    return res.status(400).send(error);
+  }
 };
 
 export const deleteMovie = async (req: Request, res: Response) => {
-  // ! req.currentUser tells us who is making the current request (eg., milo)
-  console.log("delete request from user", req.currentUser);
-  const movieId = req.params.movieId;
+  try {
+    // ! req.currentUser tells us who is making the current request (eg., milo)
+    console.log("delete request from user", req.currentUser);
+    const movieId = req.params.movieId;
 
-  // ! We're obtaining the movie document in order to check who is the owner
-  const movieDoc = await Movies.findById(movieId);
-  if (!movieDoc)
-    return res.json({
-      message: "The Movie you're trying to delete is not found",
-    });
+    // ! We're obtaining the movie document in order to check who is the owner
+    const movieDoc = await Movies.findById(movieId);
+    if (!movieDoc)
+      return res.json({
+        message: "The Movie you're trying to delete is not found",
+      });
 
-  const movieOwnerID = movieDoc.user;
-  console.log("the movie you're trying to delete is owned by", movieOwnerID);
+    const movieOwnerID = movieDoc.user;
+    console.log("the movie you're trying to delete is owned by", movieOwnerID);
 
-  if (req.currentUser._id.equals(movieOwnerID)) {
-    // if requester (eg., milo) === owner (eg., milo)
-    // ! 2) Delete the movie
-    const deletedMovie = await Movies.findByIdAndDelete(movieId);
-    // const deletedMovie = await Movies.findOneAndDelete({ _id: movieId }) // ? Alternative method.
-    // ! 3) Send back deleted movie
-    res.send(deletedMovie);
-  } else {
-    res.json({
-      message: "Sorry, it is not very nice to delete other people's movies.",
-    });
+    if (req.currentUser._id.equals(movieOwnerID)) {
+      // if requester (eg., milo) === owner (eg., milo)
+      // ! 2) Delete the movie
+      const deletedMovie = await Movies.findByIdAndDelete(movieId);
+      // const deletedMovie = await Movies.findOneAndDelete({ _id: movieId }) // ? Alternative method.
+      // ! 3) Send back deleted movie
+      res.send(deletedMovie);
+    } else {
+      res.json({
+        message: "Sorry, it is not very nice to delete other people's movies.",
+      });
+    }
+  } catch (error) {
+    return res.status(400).send(error);
   }
 };
 
@@ -96,6 +104,10 @@ export const getMovieById = async (req: Request, res: Response) => {
 };
 
 export const getMovies = async (req: Request, res: Response) => {
-  const movies = await Movies.find();
-  res.send(movies);
+  try {
+    const movies = await Movies.find();
+    res.send(movies);
+  } catch (error) {
+    return res.status(400).send(error);
+  }
 };
